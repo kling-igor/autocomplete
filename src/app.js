@@ -1,12 +1,11 @@
-import React, { PureComponent } from "react"
+import React, { PureComponent } from "react";
 
-import styled, { createGlobalStyle, ThemeProvider } from "styled-components"
+import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 
-import { MenuItem } from "@blueprintjs/core";
+import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
 import { TOP_100_FILMS } from "./films";
-
 
 // https://medium.com/styled-components/styled-components-getting-started-c9818acbcbbd
 const GlobalStyle = createGlobalStyle`
@@ -43,8 +42,37 @@ const GlobalStyle = createGlobalStyle`
 
     padding: 8px;
   }
-`;
 
+  /* .backdrop {
+    top: 24px;
+  } */
+
+  /* .bp3-overlay { */
+    /* top: 24px; */
+  /* } */
+
+  .bp3-dialog {
+    border-radius: 0px;
+    width: auto;
+    height: auto;
+    top: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .bp3-dialog-body {
+    margin: 0;
+  }
+
+  .dialog-input {
+    width: 100%;
+  }
+
+  .popover {
+    height: 200px;
+  }
+
+`;
 
 function highlightText(text, query) {
   let lastIndex = 0;
@@ -77,13 +105,16 @@ function highlightText(text, query) {
   return tokens;
 }
 
-
 function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
 const filterFilm = (query, film) => {
-  return `${film.rank}. ${film.title.toLowerCase()} ${film.year}`.indexOf(query.toLowerCase()) >= 0;
+  return (
+    `${film.rank}. ${film.title.toLowerCase()} ${film.year}`.indexOf(
+      query.toLowerCase()
+    ) >= 0
+  );
 };
 
 const renderFilm = (film, { handleClick, modifiers, query }) => {
@@ -104,10 +135,9 @@ const renderFilm = (film, { handleClick, modifiers, query }) => {
 };
 
 export default class App extends PureComponent {
-
   state = {
-    film: TOP_100_FILMS[0],
-  }
+    film: TOP_100_FILMS[0]
+  };
 
   renderInputValue = film => film.title;
 
@@ -117,22 +147,51 @@ export default class App extends PureComponent {
     return (
       <>
         <GlobalStyle />
-        <Suggest
-          items={TOP_100_FILMS}
-          itemRenderer={renderFilm}
-          itemPredicate={filterFilm}
-          closeOnSelect={true}
-          openOnKeyDown={true}
-          resetOnClose={false}
-          resetOnQuery={true}
-          resetOnSelect={false}
-          inputValueRenderer={this.renderInputValue}
-          noResults={<MenuItem disabled={true} text="No results." />}
-          onItemSelect={this.handleValueChange}
-          popoverProps={{ minimal: true }}
+
+        <Dialog
+          isOpen={true}
+          transitionDuration={0}
+          backdropClassName="backdrop"
           inputProps={{ small: true, fill: true }}
-        />
+        >
+          <div
+            ref={ref => {
+              this.divRef = ref;
+            }}
+            className={Classes.DIALOG_BODY}
+            style={{
+              width: 500,
+              height: 200,
+              padding: 0
+            }}
+          >
+            <Suggest
+              items={TOP_100_FILMS}
+              itemRenderer={renderFilm}
+              itemPredicate={filterFilm}
+              closeOnSelect={true}
+              openOnKeyDown={true}
+              resetOnClose={false}
+              resetOnQuery={true}
+              resetOnSelect={false}
+              inputValueRenderer={this.renderInputValue}
+              noResults={<MenuItem disabled={true} text="No results." />}
+              onItemSelect={this.handleValueChange}
+              usePortal={false}
+              popoverProps={{
+                minimal: true,
+                // portalContainer: this.divRef,
+                targetClassName: "dialog-input",
+                popoverClassName: "popover"
+              }}
+              inputProps={{
+                small: true,
+                fill: true
+              }}
+            />
+          </div>
+        </Dialog>
       </>
-    )
+    );
   }
 }
