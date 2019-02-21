@@ -47,9 +47,9 @@ const GlobalStyle = createGlobalStyle`
     top: 24px;
   } */
 
-  /* .bp3-overlay { */
-    /* top: 24px; */
-  /* } */
+  /* .bp3-overlay {
+    top: 24px;
+  } */
 
   .bp3-dialog {
     border-radius: 0px;
@@ -68,22 +68,22 @@ const GlobalStyle = createGlobalStyle`
     width: 100%;
   }
 
-  /* .popover {
+  div > .bp3-menu {
     max-height: 300px;
-  } */
-
-  .bp3-menu {
-    max-height: 300px;
-    overflow-y: 'auto';
+    overflow-y: auto;
     min-width: 500px;
     max-width: 500px;
     margin-left: -4
   }
 
   .myinput {
-      margin: 4px;
+    margin: 4px;
   }
 
+  .bp3-dialog-container {
+    align-items: flex-start;
+    justify-content: center;
+  }
 `;
 
 function highlightText(text, query) {
@@ -173,7 +173,7 @@ export default class App extends PureComponent {
             className={Classes.DIALOG_BODY}
             style={{
               width: 500,
-              height: 60
+              height: 72
             }}
           >
             <Suggest
