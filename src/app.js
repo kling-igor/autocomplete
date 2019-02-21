@@ -68,8 +68,20 @@ const GlobalStyle = createGlobalStyle`
     width: 100%;
   }
 
-  .popover {
-    height: 200px;
+  /* .popover {
+    max-height: 300px;
+  } */
+
+  .bp3-menu {
+    max-height: 300px;
+    overflow-y: 'auto';
+    min-width: 500px;
+    max-width: 500px;
+    margin-left: -4
+  }
+
+  .myinput {
+      margin: 4px;
   }
 
 `;
@@ -161,8 +173,7 @@ export default class App extends PureComponent {
             className={Classes.DIALOG_BODY}
             style={{
               width: 500,
-              height: 200,
-              padding: 0
+              height: 60
             }}
           >
             <Suggest
@@ -186,7 +197,8 @@ export default class App extends PureComponent {
               }}
               inputProps={{
                 small: true,
-                fill: true
+                fill: true,
+                className: "myinput"
               }}
             />
           </div>
