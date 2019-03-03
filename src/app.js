@@ -5,7 +5,12 @@ import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
-import { TOP_100_FILMS } from "./films";
+import { COMMANDS } from './commands'
+
+// https://code.visualstudio.com/api/references/commands
+// https://code.visualstudio.com/docs/getstarted/keybindings
+// https://flight-manual.atom.io/behind-atom/sections/keymaps-in-depth/
+
 
 // https://medium.com/styled-components/styled-components-getting-started-c9818acbcbbd
 const GlobalStyle = createGlobalStyle`
@@ -14,7 +19,6 @@ const GlobalStyle = createGlobalStyle`
   @import url('https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css'); */
 
   html {
-    
     height: 100%;
     margin: 0;
   }
@@ -86,6 +90,84 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const KeyStyle = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 18px;
+  width: 20px;
+  padding-left: 1px;
+  padding-right: 1px;
+  max-width: 40px;
+  border-color: #3c3c3c;
+  border-width: 0px;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  border-style: solid;
+  color: white;
+  background-color: gray;
+  font-size: 12px;
+  text-align: center;
+  margin-left: 1px;
+  margin-right: 0px;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+`;
+
+
+
+
+const specialKeys = {
+  cmd: '⌘',
+  ctrl: '⌃',
+  alt: '⌥',
+  shift: '⇧',
+  meta: '◇',
+  win: '❖',
+  up: '⇧',
+  down: '⇩',
+  left: '⇦',
+  right: '⇨',
+  // pageup:'',
+  // pagedown:'',
+  end: '⤓',
+  home: '⤒',
+  tab: '',
+  enter: '⏎',
+  escape: '',
+  space: '',
+  backspace: '⌫',
+  'delete': '⌦'
+}
+
+function getKeysLabel(key) {
+  if (!key || key === 'unassigned') return null
+
+  const items = key.split('+')
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items[i]
+    const special = specialKeys[item]
+    if (!!special) {
+      items[i] = special
+    }
+    else {
+      items[i] = items[i].toUpperCase()
+    }
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-end"
+      }}
+    >
+      {items.map((item, i) => <KeyStyle key={i}>{item}</KeyStyle>)}
+    </div>
+  )
+}
+
 function highlightText(text, query) {
   let lastIndex = 0;
   const words = query
@@ -121,25 +203,24 @@ function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-const filterFilm = (query, film) => {
-  return (
-    `${film.rank}. ${film.title.toLowerCase()} ${film.year}`.indexOf(
-      query.toLowerCase()
-    ) >= 0
-  );
+const filterCommand = (query, { context, title }) => {
+  const text = context ? `${context}: ${title}` : title
+
+  return (text.toLowerCase().indexOf(query.toLowerCase()) >= 0);
 };
 
-const renderFilm = (film, { handleClick, modifiers, query }) => {
+const renderCommand = ({ context, key, title }, { handleClick, modifiers, query }) => {
   if (!modifiers.matchesPredicate) {
     return null;
   }
-  const text = `${film.rank}. ${film.title}`;
+  const text = context ? `${context}: ${title}` : title
   return (
     <MenuItem
       active={modifiers.active}
       disabled={modifiers.disabled}
-      label={film.year.toString()}
-      key={film.rank}
+      // label="ctr+up"
+      labelElement={getKeysLabel(key)}
+      key={text}
       onClick={handleClick}
       text={highlightText(text, query)}
     />
@@ -148,12 +229,12 @@ const renderFilm = (film, { handleClick, modifiers, query }) => {
 
 export default class App extends PureComponent {
   state = {
-    film: TOP_100_FILMS[0]
+    command: COMMANDS[0]
   };
 
-  renderInputValue = film => film.title;
+  renderInputValue = ({ context, title }) => context ? `${context}: ${title}` : title
 
-  handleValueChange = film => this.setState({ film });
+  handleValueChange = command => this.setState({ command });
 
   render() {
     return (
@@ -177,16 +258,16 @@ export default class App extends PureComponent {
             }}
           >
             <Suggest
-              items={TOP_100_FILMS}
-              itemRenderer={renderFilm}
-              itemPredicate={filterFilm}
+              items={COMMANDS}
+              itemRenderer={renderCommand}
+              itemPredicate={filterCommand}
               closeOnSelect={true}
               openOnKeyDown={true}
               resetOnClose={false}
               resetOnQuery={true}
               resetOnSelect={false}
               inputValueRenderer={this.renderInputValue}
-              noResults={<MenuItem disabled={true} text="No results." />}
+              noResults={<MenuItem disabled={true} text="No commands matching" />}
               onItemSelect={this.handleValueChange}
               usePortal={false}
               popoverProps={{
@@ -207,3 +288,7 @@ export default class App extends PureComponent {
     );
   }
 }
+
+/*
+<KeyStyle>⎇</KeyStyle>
+*/
