@@ -22,7 +22,5 @@ export const COMMANDS = [
 ].sort((a, b) => {
   const aText = a.context ? `${a.context}: ${a.title}` : a.title
   const bText = b.context ? `${b.context}: ${b.title}` : b.title
-  if (aText < bText) { return -1; }
-  if (aText > bText) { return 1; }
-  return 0;
+  return aText.localeCompare(bText)
 })
