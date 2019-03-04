@@ -302,6 +302,16 @@ export default class App extends PureComponent {
     this.setState({ command });
   };
 
+  renderNoResults = () => {
+    let text = "No result found";
+
+    if (this.state.suggestions === COMMANDS) {
+      text = "No commands matching";
+    }
+
+    return <MenuItem disabled={true} text={text} />;
+  };
+
   render() {
     return (
       <>
@@ -336,9 +346,7 @@ export default class App extends PureComponent {
               resetOnQuery={true}
               resetOnSelect={false}
               inputValueRenderer={this.renderInputValue}
-              noResults={
-                <MenuItem disabled={true} text="No commands matching" />
-              }
+              noResults={this.renderNoResults()}
               onItemSelect={this.handleValueChange}
               usePortal={false}
               popoverProps={{
@@ -350,7 +358,9 @@ export default class App extends PureComponent {
               inputProps={{
                 small: true,
                 fill: true,
-                className: "myinput"
+                className: "myinput",
+                placeholder:
+                  "Type '?' to get help on the actions you can take from here"
               }}
             />
           </div>
