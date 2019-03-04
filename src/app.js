@@ -5,12 +5,11 @@ import styled, { createGlobalStyle, ThemeProvider } from "styled-components";
 import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
-import { COMMANDS } from './commands'
+import { COMMANDS } from "./commands";
 
 // https://code.visualstudio.com/api/references/commands
 // https://code.visualstudio.com/docs/getstarted/keybindings
 // https://flight-manual.atom.io/behind-atom/sections/keymaps-in-depth/
-
 
 // https://medium.com/styled-components/styled-components-getting-started-c9818acbcbbd
 const GlobalStyle = createGlobalStyle`
@@ -113,44 +112,40 @@ const KeyStyle = styled.div`
   font-family: Roboto, Arial, Helvetica, sans-serif;
 `;
 
-
-
-
 const specialKeys = {
-  cmd: '⌘',
-  ctrl: '⌃',
-  alt: '⌥',
-  shift: '⇧',
-  meta: '◇',
-  win: '❖',
-  up: '⇧',
-  down: '⇩',
-  left: '⇦',
-  right: '⇨',
+  cmd: "⌘",
+  ctrl: "⌃",
+  alt: "⌥",
+  shift: "⇧",
+  meta: "◇",
+  win: "❖",
+  up: "⇧",
+  down: "⇩",
+  left: "⇦",
+  right: "⇨",
   // pageup:'',
   // pagedown:'',
-  end: '⤓',
-  home: '⤒',
-  tab: '',
-  enter: '⏎',
-  escape: '',
-  space: '',
-  backspace: '⌫',
-  'delete': '⌦'
-}
+  end: "⤓",
+  home: "⤒",
+  tab: "",
+  enter: "⏎",
+  escape: "",
+  space: "",
+  backspace: "⌫",
+  delete: "⌦"
+};
 
 function getKeysLabel(key) {
-  if (!key || key === 'unassigned') return null
+  if (!key || key === "unassigned") return null;
 
-  const items = key.split('+')
+  const items = key.split("+");
   for (let i = 0; i < items.length; i += 1) {
-    const item = items[i]
-    const special = specialKeys[item]
+    const item = items[i];
+    const special = specialKeys[item];
     if (!!special) {
-      items[i] = special
-    }
-    else {
-      items[i] = items[i].toUpperCase()
+      items[i] = special;
+    } else {
+      items[i] = items[i].toUpperCase();
     }
   }
 
@@ -163,9 +158,11 @@ function getKeysLabel(key) {
         justifyContent: "flex-end"
       }}
     >
-      {items.map((item, i) => <KeyStyle key={i}>{item}</KeyStyle>)}
+      {items.map((item, i) => (
+        <KeyStyle key={i}>{item}</KeyStyle>
+      ))}
     </div>
-  )
+  );
 }
 
 function highlightText(text, query) {
@@ -203,38 +200,107 @@ function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-const filterCommand = (query, { context, title }) => {
-  const text = context ? `${context}: ${title}` : title
-
-  return (text.toLowerCase().indexOf(query.toLowerCase()) >= 0);
-};
-
-const renderCommand = ({ context, key, title }, { handleClick, modifiers, query }) => {
-  if (!modifiers.matchesPredicate) {
-    return null;
-  }
-  const text = context ? `${context}: ${title}` : title
-  return (
-    <MenuItem
-      active={modifiers.active}
-      disabled={modifiers.disabled}
-      // label="ctr+up"
-      labelElement={getKeysLabel(key)}
-      key={text}
-      onClick={handleClick}
-      text={highlightText(text, query)}
-    />
-  );
-};
+const FILE_LIST = ["index.js", "commands.js", "app.js", "package.json"];
 
 export default class App extends PureComponent {
   state = {
-    command: COMMANDS[0]
+    command: null,
+    suggestions: FILE_LIST
   };
 
-  renderInputValue = ({ context, title }) => context ? `${context}: ${title}` : title
+  renderInputValue = inputValue => {
+    // console.log("renderInputValue:", inputValue);
+    // console.log("\t", this.state.suggestions);
 
-  handleValueChange = command => this.setState({ command });
+    if (this.state.suggestions === FILE_LIST) {
+      return inputValue;
+    }
+    if (this.state.suggestions === COMMANDS) {
+      const { context, title } = inputValue;
+      return context ? `${context}: ${title}` : title;
+    }
+    return inputValue;
+  };
+
+  filterCommands = (query, items) => {
+    // console.log("filterCommands: query:", query);
+
+    if (query.startsWith(">")) {
+      const commandQuery = query.replace(">", "");
+      return COMMANDS.filter(({ context, title }) => {
+        const text = context ? `${context}: ${title}` : title;
+        return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
+      });
+    }
+
+    return FILE_LIST.filter(filename => {
+      return filename.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+    });
+  };
+
+  renderCommand = (command, { handleClick, modifiers, query }) => {
+    if (!modifiers.matchesPredicate) {
+      return null;
+    }
+
+    // console.log("renderCommand:", command);
+    // console.log("\tsuggestions:", this.state.suggestions);
+
+    if (this.state.suggestions === FILE_LIST) {
+      return (
+        <MenuItem
+          active={modifiers.active}
+          disabled={modifiers.disabled}
+          key={command}
+          onClick={handleClick}
+          text={highlightText(command, query)}
+        />
+      );
+    }
+    if (this.state.suggestions === COMMANDS) {
+      const { context, key, title } = command;
+      const text = context ? `${context}: ${title}` : title;
+      return (
+        <MenuItem
+          active={modifiers.active}
+          disabled={modifiers.disabled}
+          labelElement={getKeysLabel(key)}
+          key={text}
+          onClick={handleClick}
+          text={highlightText(text, query)}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  onQueryChange = query => {
+    // console.log("onQueryChange", query);
+
+    const { suggestions } = this.state;
+
+    if (query.startsWith(">")) {
+      if (suggestions !== COMMANDS) {
+        // console.log("ACTIVATE COMMANDS");
+        this.setState({ suggestions: COMMANDS });
+      }
+    } else {
+      if (suggestions !== FILE_LIST) {
+        // console.log("ACTIVATE FILELIST");
+        this.setState({ suggestions: FILE_LIST });
+      }
+    }
+
+    if (query.length === 0) {
+      this.setState({ command: null });
+    }
+  };
+
+  handleValueChange = command => {
+    // console.log("SELECTED:", command);
+    this.setState({ command });
+  };
 
   render() {
     return (
@@ -258,16 +324,21 @@ export default class App extends PureComponent {
             }}
           >
             <Suggest
-              items={COMMANDS}
-              itemRenderer={renderCommand}
-              itemPredicate={filterCommand}
+              items={[]}
+              selectedItem={this.state.command}
+              itemRenderer={this.renderCommand}
+              // itemPredicate={this.filterCommand}
+              itemListPredicate={this.filterCommands}
+              onQueryChange={this.onQueryChange}
               closeOnSelect={true}
-              openOnKeyDown={true}
+              openOnKeyDown={false}
               resetOnClose={false}
               resetOnQuery={true}
               resetOnSelect={false}
               inputValueRenderer={this.renderInputValue}
-              noResults={<MenuItem disabled={true} text="No commands matching" />}
+              noResults={
+                <MenuItem disabled={true} text="No commands matching" />
+              }
               onItemSelect={this.handleValueChange}
               usePortal={false}
               popoverProps={{
