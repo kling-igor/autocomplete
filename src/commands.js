@@ -1,4 +1,3 @@
-
 // https://code.visualstudio.com/docs/getstarted/keybindings
 
 // f1-f19, a-z, 0-9
@@ -14,13 +13,37 @@
 // Linux:	Ctrl+, Shift+, Alt+, Meta+
 
 export const COMMANDS = [
-  { title: 'Something', context: 'File', key: 'ctrl+f12', command: "workspace:action:files:open-file" },
-  { title: 'Something Else', context: 'Editor', command: "workspace:action:files:open-file" },
-  { title: 'Open...', context: 'File', key: 'ctrl+o', command: "workspace:action:files:open-file" },
-  { title: 'Move Line Up', context: 'Editor', key: 'alt+up', command: "editor:action:move-line-up" },
-  { title: 'Move Line Down', context: 'Editor', key: 'alt+down', command: "editor:action:move-line-down" }
+  {
+    title: "Something",
+    context: "File",
+    key: "ctrl+space+enter",
+    command: "workspace:action:files:open-file"
+  },
+  {
+    title: "Something Else",
+    context: "Editor",
+    command: "workspace:action:files:open-file"
+  },
+  {
+    title: "Open...",
+    context: "File",
+    key: "ctrl+o",
+    command: "workspace:action:files:open-file"
+  },
+  {
+    title: "Move Line Up",
+    context: "Editor",
+    key: "alt+up",
+    command: "editor:action:move-line-up"
+  },
+  {
+    title: "Move Line Down",
+    context: "Editor",
+    key: "alt+down",
+    command: "editor:action:move-line-down"
+  }
 ].sort((a, b) => {
-  const aText = a.context ? `${a.context}: ${a.title}` : a.title
-  const bText = b.context ? `${b.context}: ${b.title}` : b.title
-  return aText.localeCompare(bText)
-})
+  const aText = a.context ? `${a.context}: ${a.title}` : a.title;
+  const bText = b.context ? `${b.context}: ${b.title}` : b.title;
+  return aText.localeCompare(bText);
+});

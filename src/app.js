@@ -6,6 +6,7 @@ import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
 import { COMMANDS } from "./commands";
+import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
 
 // https://code.visualstudio.com/api/references/commands
 // https://code.visualstudio.com/docs/getstarted/keybindings
@@ -87,28 +88,37 @@ const GlobalStyle = createGlobalStyle`
     align-items: flex-start;
     justify-content: center;
   }
+
+  .menu-item {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1em;
+  }
 `;
 
-const KeyStyle = styled.div`
+// theme:       DARK     LIGHT
+// border:     #3c3c3c  #d8d8d8
+// background: #313230  #ebebeb
+// foreground: #cbcbcb  #686868
+
+const KeyStyle = styled.span`
   display: flex;
   justify-content: center;
   align-items: center;
   height: 18px;
-  width: 20px;
-  padding-left: 1px;
-  padding-right: 1px;
-  max-width: 40px;
-  border-color: #3c3c3c;
-  border-width: 0px;
+  margin: 0px;
+  margin-left: 1px;
+  padding-left: 3px;
+  padding-right: 3px;
+  border-color: #d8d8d8;
+  border-width: 1px;
   border-bottom-width: 2px;
   border-radius: 4px;
   border-style: solid;
-  color: white;
-  background-color: gray;
+  color: #686868;
+  background-color: #ebebeb;
   font-size: 12px;
   text-align: center;
-  margin-left: 1px;
-  margin-right: 0px;
   font-family: Roboto, Arial, Helvetica, sans-serif;
 `;
 
@@ -116,6 +126,7 @@ const specialKeys = {
   cmd: "⌘",
   ctrl: "⌃",
   alt: "⌥",
+  opt: "⎇",
   shift: "⇧",
   meta: "◇",
   win: "❖",
@@ -123,16 +134,16 @@ const specialKeys = {
   down: "⇩",
   left: "⇦",
   right: "⇨",
-  // pageup:'',
-  // pagedown:'',
-  end: "⤓",
-  home: "⤒",
-  tab: "",
-  enter: "⏎",
-  escape: "",
-  space: "",
-  backspace: "⌫",
-  delete: "⌦"
+  pageup: "PageUp",
+  pagedown: "PageDown",
+  end: "End",
+  home: "Home",
+  tab: "Tab",
+  enter: "Enter",
+  escape: "Escape",
+  space: "Space",
+  backspace: "Backspace",
+  delete: "Delete"
 };
 
 function getKeysLabel(key) {
@@ -254,6 +265,7 @@ export default class App extends PureComponent {
           key={command}
           onClick={handleClick}
           text={highlightText(command, query)}
+          textClassName="menu-item"
         />
       );
     }
@@ -268,6 +280,7 @@ export default class App extends PureComponent {
           key={text}
           onClick={handleClick}
           text={highlightText(text, query)}
+          textClassName="menu-item"
         />
       );
     }
@@ -369,7 +382,3 @@ export default class App extends PureComponent {
     );
   }
 }
-
-/*
-<KeyStyle>⎇</KeyStyle>
-*/
