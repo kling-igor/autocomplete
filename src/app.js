@@ -6,6 +6,9 @@ import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
 import { COMMANDS } from "./commands";
+import { HELP_COMMANDS } from './help-commands'
+import { FILES } from './files'
+
 import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
 
 // https://code.visualstudio.com/api/references/commands
@@ -146,10 +149,10 @@ const specialKeys = {
   delete: "Delete"
 };
 
-function getKeysLabel(key) {
-  if (!key || key === "unassigned") return null;
+function getKeysLabel(keystroke) {
+  if (!keystroke || keystroke === "unassigned") return null;
 
-  const items = key.split("+");
+  const items = keystroke.split("+");
   for (let i = 0; i < items.length; i += 1) {
     const item = items[i];
     const special = specialKeys[item];
@@ -174,6 +177,16 @@ function getKeysLabel(key) {
       ))}
     </div>
   );
+}
+
+function getDescription(description) {
+  return (
+    <span style={{
+      color: 'grey'
+    }}>
+      {description}
+    </span>
+  )
 }
 
 function highlightText(text, query) {
@@ -211,20 +224,22 @@ function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-const FILE_LIST = ["index.js", "commands.js", "app.js", "package.json"];
+// const FILE_LIST = ["index.js", "commands.js", "app.js", "package.json"];
 
 export default class App extends PureComponent {
   state = {
     command: null,
-    suggestions: FILE_LIST
+    suggestions: FILES
   };
 
   renderInputValue = inputValue => {
     // console.log("renderInputValue:", inputValue);
     // console.log("\t", this.state.suggestions);
 
-    if (this.state.suggestions === FILE_LIST) {
-      return inputValue;
+    if (this.state.suggestions === FILES) {
+      // return inputValue;
+      const { fileName } = inputValue;
+      return fileName
     }
     if (this.state.suggestions === COMMANDS) {
       const { context, title } = inputValue;
@@ -244,8 +259,9 @@ export default class App extends PureComponent {
       });
     }
 
-    return FILE_LIST.filter(filename => {
-      return filename.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+    return FILES.filter(({ fileName, path }) => {
+      const text = `${path}/${fileName}`
+      return text.toLowerCase().indexOf(query.toLowerCase()) >= 0;
     });
   };
 
@@ -257,14 +273,16 @@ export default class App extends PureComponent {
     // console.log("renderCommand:", command);
     // console.log("\tsuggestions:", this.state.suggestions);
 
-    if (this.state.suggestions === FILE_LIST) {
+    if (this.state.suggestions === FILES) {
+      const { fileName, path } = command
       return (
         <MenuItem
           active={modifiers.active}
           disabled={modifiers.disabled}
-          key={command}
+          labelElement={getDescription(path)}
+          key={`${path}/${fileName}`}
           onClick={handleClick}
-          text={highlightText(command, query)}
+          text={highlightText(fileName, query)}
           textClassName="menu-item"
         />
       );
@@ -299,9 +317,9 @@ export default class App extends PureComponent {
         this.setState({ suggestions: COMMANDS });
       }
     } else {
-      if (suggestions !== FILE_LIST) {
+      if (suggestions !== FILES) {
         // console.log("ACTIVATE FILELIST");
-        this.setState({ suggestions: FILE_LIST });
+        this.setState({ suggestions: FILES });
       }
     }
 
@@ -311,7 +329,7 @@ export default class App extends PureComponent {
   };
 
   handleValueChange = command => {
-    // console.log("SELECTED:", command);
+    console.log("SELECTED:", command);
     this.setState({ command });
   };
 
