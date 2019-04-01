@@ -224,8 +224,6 @@ function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
-// const FILE_LIST = ["index.js", "commands.js", "app.js", "package.json"];
-
 export default class App extends PureComponent {
   state = {
     command: null,
@@ -249,14 +247,19 @@ export default class App extends PureComponent {
   };
 
   filterCommands = (query, items) => {
-    // console.log("filterCommands: query:", query);
-
     if (query.startsWith(">")) {
       const commandQuery = query.replace(">", "");
       return COMMANDS.filter(({ context, title }) => {
         const text = context ? `${context}: ${title}` : title;
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
       });
+    }
+    else if (query.startsWith("?")) {
+      const commandQuery = query.replace("?", "");
+      return HELP_COMMANDS.filter(({ prefix, description }) => {
+        const text = `${prefix} ${description}`
+        return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
+      })
     }
 
     return FILES.filter(({ fileName, path }) => {
@@ -302,6 +305,20 @@ export default class App extends PureComponent {
         />
       );
     }
+    if (this.state.suggestions === HELP_COMMANDS) {
+      const { prefix, description } = command
+      return (
+        <MenuItem
+          active={modifiers.active}
+          disabled={modifiers.disabled}
+          // labelElement={getDescription(description)}
+          key={`${prefix}`}
+          onClick={handleClick}
+          text={highlightText(`${prefix} ${description}`, query)}
+          textClassName="menu-item"
+        />
+      );
+    }
 
     return null;
   };
@@ -313,15 +330,24 @@ export default class App extends PureComponent {
 
     if (query.startsWith(">")) {
       if (suggestions !== COMMANDS) {
-        // console.log("ACTIVATE COMMANDS");
         this.setState({ suggestions: COMMANDS });
       }
-    } else {
+    }
+    else if (query.startsWith("?")) {
+      if (suggestions !== HELP_COMMANDS) {
+        this.setState({ suggestions: HELP_COMMANDS });
+      }
+
+      // есть есть второй символ
+      // анализируем его
+
+    }
+    else {
       if (suggestions !== FILES) {
-        // console.log("ACTIVATE FILELIST");
         this.setState({ suggestions: FILES });
       }
     }
+
 
     if (query.length === 0) {
       this.setState({ command: null });
