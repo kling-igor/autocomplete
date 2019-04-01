@@ -11,6 +11,9 @@ import { FILES } from './files'
 
 import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
 
+let GOTOLINE = []
+
+
 // https://code.visualstudio.com/api/references/commands
 // https://code.visualstudio.com/docs/getstarted/keybindings
 // https://flight-manual.atom.io/behind-atom/sections/keymaps-in-depth/
@@ -189,7 +192,7 @@ function getDescription(description) {
   )
 }
 
-function highlightText(text, query) {
+function highlightText(text = '', query) {
   let lastIndex = 0;
   const words = query
     .split(/\s+/)
@@ -231,7 +234,7 @@ export default class App extends PureComponent {
   };
 
   renderInputValue = inputValue => {
-    // console.log("renderInputValue:", inputValue);
+    console.log("renderInputValue:", inputValue);
     // console.log("\t", this.state.suggestions);
 
     if (this.state.suggestions === FILES) {
@@ -247,6 +250,9 @@ export default class App extends PureComponent {
   };
 
   filterCommands = (query, items) => {
+
+    console.log('filterCommands:', items)
+
     if (query.startsWith(">")) {
       const commandQuery = query.replace(">", "");
       return COMMANDS.filter(({ context, title }) => {
@@ -260,6 +266,13 @@ export default class App extends PureComponent {
         const text = `${prefix} ${description}`
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
       })
+    }
+    else if (query.startsWith(":")) {
+      const lineNumber = query.slice(1)
+      if (!lineNumber) {
+        return ['Current line: 265. Type a line number between 1 and 429 to navigate to.']
+      }
+      return [`Goto line ${lineNumber}.`]
     }
 
     return FILES.filter(({ fileName, path }) => {
@@ -319,6 +332,18 @@ export default class App extends PureComponent {
         />
       );
     }
+    if (this.state.suggestions === GOTOLINE) {
+      return (
+        <MenuItem
+          active={false}
+          disabled={modifiers.disabled}
+          key={command}
+          onClick={handleClick}
+          text={command}
+          textClassName="menu-item"
+        />
+      );
+    }
 
     return null;
   };
@@ -342,6 +367,11 @@ export default class App extends PureComponent {
       // анализируем его
 
     }
+    else if (query.startsWith(":")) {
+      if (suggestions !== GOTOLINE) {
+        this.setState({ suggestions: GOTOLINE });
+      }
+    }
     else {
       if (suggestions !== FILES) {
         this.setState({ suggestions: FILES });
@@ -356,16 +386,32 @@ export default class App extends PureComponent {
 
   handleValueChange = command => {
     console.log("SELECTED:", command);
-    this.setState({ command });
+
+    if (this.state.suggestions === HELP_COMMANDS) {
+      const index = HELP_COMMANDS.findIndex(item => item.prefix === command.prefix)
+      if (index !== -1) {
+        switch (command.prefix) {
+          case '>':
+            this.setState({ suggestions: COMMANDS, command: null })
+            console.log('>>>')
+            break;
+          case '@':
+            break;
+          case ':':
+            break;
+          default:
+            // goto file
+            this.setState({ suggestions: FILES, command: null })
+            break;
+        }
+      }
+    }
+
+    // this.setState({ command });
   };
 
   renderNoResults = () => {
-    let text = "No result found";
-
-    if (this.state.suggestions === COMMANDS) {
-      text = "No commands matching";
-    }
-
+    const text = this.state.suggestions === COMMANDS ? "No commands matching" : "No result found";
     return <MenuItem disabled={true} text={text} />;
   };
 
