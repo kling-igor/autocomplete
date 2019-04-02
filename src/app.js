@@ -152,6 +152,7 @@ const specialKeys = {
 };
 
 const specialFiles = {
+  "readme.md": "readme.svg",
   "package.json": "npm.svg",
   ".gitignore": "git.svg",
   ".npmrc": "npm.svg"
@@ -167,10 +168,10 @@ const fileExtensions = {
 const fileExtensionRegex = /\.([0-9a-z]{1,5})$/i;
 
 const fileIcon = ICONS_PATH => name => {
-  let icon = specialFiles[name];
+  let icon = specialFiles[name.toLowerCase()];
 
   if (!icon) {
-    const extensionMatch = name.match(fileExtensionRegex);
+    const extensionMatch = name.toLowerCase().match(fileExtensionRegex);
 
     if (extensionMatch) {
       const extension = extensionMatch[1];
