@@ -6,13 +6,12 @@ import { MenuItem, Dialog, Classes } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 
 import { COMMANDS } from "./commands";
-import { HELP_COMMANDS } from './help-commands'
-import { FILES } from './files'
+import { HELP_COMMANDS } from "./help-commands";
+import { FILES } from "./files";
 
 import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
 
-let GOTOLINE = []
-
+let GOTOLINE = [];
 
 // https://code.visualstudio.com/api/references/commands
 // https://code.visualstudio.com/docs/getstarted/keybindings
@@ -184,15 +183,17 @@ function getKeysLabel(keystroke) {
 
 function getDescription(description) {
   return (
-    <span style={{
-      color: 'grey'
-    }}>
+    <span
+      style={{
+        color: "grey"
+      }}
+    >
       {description}
     </span>
-  )
+  );
 }
 
-function highlightText(text = '', query) {
+function highlightText(text = "", query) {
   let lastIndex = 0;
   const words = query
     .split(/\s+/)
@@ -214,7 +215,11 @@ function highlightText(text = '', query) {
       tokens.push(before);
     }
     lastIndex = regexp.lastIndex;
-    tokens.push(<strong key={lastIndex}>{match[0]}</strong>);
+    tokens.push(
+      <strong key={lastIndex} style={{}}>
+        {match[0]}
+      </strong>
+    );
   }
   const rest = text.slice(lastIndex);
   if (rest.length > 0) {
@@ -240,7 +245,7 @@ export default class App extends PureComponent {
     if (this.state.suggestions === FILES) {
       // return inputValue;
       const { fileName } = inputValue;
-      return fileName
+      return fileName;
     }
     if (this.state.suggestions === COMMANDS) {
       const { context, title } = inputValue;
@@ -250,8 +255,7 @@ export default class App extends PureComponent {
   };
 
   filterCommands = (query, items) => {
-
-    console.log('filterCommands:', items)
+    console.log("filterCommands:", items);
 
     if (query.startsWith(">")) {
       const commandQuery = query.replace(">", "");
@@ -259,26 +263,38 @@ export default class App extends PureComponent {
         const text = context ? `${context}: ${title}` : title;
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
       });
-    }
-    else if (query.startsWith("?")) {
+    } else if (query.startsWith("?")) {
       const commandQuery = query.replace("?", "");
       return HELP_COMMANDS.filter(({ prefix, description }) => {
-        const text = `${prefix} ${description}`
+        const text = `${prefix} ${description}`;
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
-      })
-    }
-    else if (query.startsWith(":")) {
-      const lineNumber = query.slice(1)
+      });
+    } else if (query.startsWith(":")) {
+      const lineNumber = query.slice(1);
       if (!lineNumber) {
-        return ['Current line: 265. Type a line number between 1 and 429 to navigate to.']
+        return [
+          "Current line: 265. Type a line number between 1 and 429 to navigate to."
+        ];
       }
-      return [`Goto line ${lineNumber}.`]
+      return [`Goto line ${lineNumber}.`];
     }
 
     return FILES.filter(({ fileName, path }) => {
-      const text = `${path}/${fileName}`
+      const text = `${path}/${fileName}`;
       return text.toLowerCase().indexOf(query.toLowerCase()) >= 0;
     });
+  };
+
+  renderFileMenuItem = (fileName, path, query) => {
+    return (
+      <span>
+        {highlightText(fileName, query)}
+        <span> </span>
+        <span style={{ fontSize: "12px", color: "grey" }}>
+          {highlightText(path, query)}
+        </span>
+      </span>
+    );
   };
 
   renderCommand = (command, { handleClick, modifiers, query }) => {
@@ -290,15 +306,14 @@ export default class App extends PureComponent {
     // console.log("\tsuggestions:", this.state.suggestions);
 
     if (this.state.suggestions === FILES) {
-      const { fileName, path } = command
+      const { fileName, path } = command;
       return (
         <MenuItem
           active={modifiers.active}
           disabled={modifiers.disabled}
-          labelElement={getDescription(path)}
           key={`${path}/${fileName}`}
           onClick={handleClick}
-          text={highlightText(fileName, query)}
+          text={this.renderFileMenuItem(fileName, path, query)}
           textClassName="menu-item"
         />
       );
@@ -319,7 +334,7 @@ export default class App extends PureComponent {
       );
     }
     if (this.state.suggestions === HELP_COMMANDS) {
-      const { prefix, description } = command
+      const { prefix, description } = command;
       return (
         <MenuItem
           active={modifiers.active}
@@ -357,27 +372,22 @@ export default class App extends PureComponent {
       if (suggestions !== COMMANDS) {
         this.setState({ suggestions: COMMANDS });
       }
-    }
-    else if (query.startsWith("?")) {
+    } else if (query.startsWith("?")) {
       if (suggestions !== HELP_COMMANDS) {
         this.setState({ suggestions: HELP_COMMANDS });
       }
 
       // есть есть второй символ
       // анализируем его
-
-    }
-    else if (query.startsWith(":")) {
+    } else if (query.startsWith(":")) {
       if (suggestions !== GOTOLINE) {
         this.setState({ suggestions: GOTOLINE });
       }
-    }
-    else {
+    } else {
       if (suggestions !== FILES) {
         this.setState({ suggestions: FILES });
       }
     }
-
 
     if (query.length === 0) {
       this.setState({ command: null });
@@ -388,20 +398,22 @@ export default class App extends PureComponent {
     console.log("SELECTED:", command);
 
     if (this.state.suggestions === HELP_COMMANDS) {
-      const index = HELP_COMMANDS.findIndex(item => item.prefix === command.prefix)
+      const index = HELP_COMMANDS.findIndex(
+        item => item.prefix === command.prefix
+      );
       if (index !== -1) {
         switch (command.prefix) {
-          case '>':
-            this.setState({ suggestions: COMMANDS, command: null })
-            console.log('>>>')
+          case ">":
+            this.setState({ suggestions: COMMANDS, command: null });
+            console.log(">>>");
             break;
-          case '@':
+          case "@":
             break;
-          case ':':
+          case ":":
             break;
           default:
             // goto file
-            this.setState({ suggestions: FILES, command: null })
+            this.setState({ suggestions: FILES, command: null });
             break;
         }
       }
@@ -411,7 +423,10 @@ export default class App extends PureComponent {
   };
 
   renderNoResults = () => {
-    const text = this.state.suggestions === COMMANDS ? "No commands matching" : "No result found";
+    const text =
+      this.state.suggestions === COMMANDS
+        ? "No commands matching"
+        : "No result found";
     return <MenuItem disabled={true} text={text} />;
   };
 
