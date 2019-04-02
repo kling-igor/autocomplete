@@ -398,7 +398,7 @@ export default class App extends PureComponent {
       const { prefix, description } = command;
       return (
         <MenuItem
-          active={modifiers.active}
+          active={false}// modifiers.active
           disabled={modifiers.disabled}
           // labelElement={getDescription(description)}
           key={`${prefix}`}
