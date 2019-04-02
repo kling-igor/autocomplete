@@ -151,6 +151,12 @@ const specialKeys = {
   delete: "Delete"
 };
 
+// https://github.com/Microsoft/vscode/issues/27764
+// https://github.com/Microsoft/vscode/issues/2628#issuecomment-297566399
+
+// https://github.com/Microsoft/vscode/tree/6511d05ec8f680d2fde87b4b5a1d909f78120697/src/vs/editor/contrib/suggest/media
+// https://github.com/Microsoft/vscode/tree/master/src/vs/editor/contrib/documentSymbols/media
+
 const specialFiles = {
   "readme.md": "readme.svg",
   "package.json": "npm.svg",
