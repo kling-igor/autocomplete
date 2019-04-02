@@ -9,7 +9,11 @@ import { COMMANDS } from "./commands";
 import { HELP_COMMANDS } from "./help-commands";
 import { FILES } from "./files";
 
+import { JS_SYMBOLS, JSON_SYMBOLS } from './symbols'
+
 import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
+
+const SYMBOLS = JSON_SYMBOLS
 
 let GOTOLINE = [];
 
@@ -156,6 +160,25 @@ const specialKeys = {
 
 // https://github.com/Microsoft/vscode/tree/6511d05ec8f680d2fde87b4b5a1d909f78120697/src/vs/editor/contrib/suggest/media
 // https://github.com/Microsoft/vscode/tree/master/src/vs/editor/contrib/documentSymbols/media
+
+
+const symbolTypes = {
+  'class': 'class.svg',
+  'constructor': 'method.svg',
+  'method': 'method.svg'
+}
+
+
+const symbolIcon = ICONS_PATH => type => {
+  let icon = symbolTypes[type.toLowerCase()]
+  if (!icon) {
+    icon = 'property.svg'
+  }
+
+  return `${ICONS_PATH}/${icon}`;
+}
+
+const getSymbolIcon = symbolIcon("assets/symbol-icons")
 
 const specialFiles = {
   "readme.md": "readme.svg",
@@ -305,6 +328,26 @@ const renderFileMenuItem = (fileName, path, query) => {
   );
 };
 
+const renderSymbolItem = (symbol, type, query) => {
+
+  const icon = getSymbolIcon(type)
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start"
+      }}
+    >
+      <ListItemIconStyle height="16" width="16" src={icon} />
+      <span>
+        {highlightText(symbol, query)}
+      </span>
+    </div>
+  );
+
+}
 export default class App extends PureComponent {
   state = {
     command: null,
@@ -320,6 +363,12 @@ export default class App extends PureComponent {
       const { fileName } = inputValue;
       return fileName;
     }
+
+    if (this.state.suggestions === SYMBOLS) {
+      const { symbol } = inputValue
+      return symbol
+    }
+
     if (this.state.suggestions === COMMANDS) {
       const { context, title } = inputValue;
       return context ? `${context}: ${title}` : title;
@@ -336,15 +385,27 @@ export default class App extends PureComponent {
         const text = context ? `${context}: ${title}` : title;
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
       });
-    } else if (query.startsWith("?")) {
+    }
+
+    if (query.startsWith("?")) {
       const commandQuery = query.replace("?", "");
       return HELP_COMMANDS.filter(({ prefix, description }) => {
         const text = `${prefix} ${description}`;
         return text.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
       });
-    } else if (query.startsWith(":")) {
-      const lineNumber = query.slice(1);
-      if (!lineNumber) {
+    }
+
+    if (query.startsWith("@")) {
+      const commandQuery = query.replace("@", "");
+      return SYMBOLS.filter(({ symbol }) => {
+        return symbol.toLowerCase().indexOf(commandQuery.toLowerCase()) >= 0;
+      });
+    }
+
+    if (query.startsWith(":")) {
+      const lineNumber = Number.parseInt(query.slice(1));
+
+      if (Number.isNaN(lineNumber)) {
         return [
           "Current line: 265. Type a line number between 1 and 429 to navigate to."
         ];
@@ -375,6 +436,19 @@ export default class App extends PureComponent {
           key={`${path}/${fileName}`}
           onClick={handleClick}
           text={renderFileMenuItem(fileName, path, query)}
+          textClassName="menu-item"
+        />
+      );
+    }
+    if (this.state.suggestions === SYMBOLS) {
+      const { symbol, type, line } = command;
+      return (
+        <MenuItem
+          active={modifiers.active}
+          disabled={modifiers.disabled}
+          key={`${symbol}/${line}`}
+          onClick={handleClick}
+          text={renderSymbolItem(symbol, type, query)}
           textClassName="menu-item"
         />
       );
@@ -444,7 +518,13 @@ export default class App extends PureComponent {
       if (suggestions !== GOTOLINE) {
         this.setState({ suggestions: GOTOLINE });
       }
-    } else {
+    }
+    else if (query.startsWith("@")) {
+      if (suggestions !== SYMBOLS) {
+        this.setState({ suggestions: SYMBOLS });
+      }
+    }
+    else {
       if (suggestions !== FILES) {
         this.setState({ suggestions: FILES });
       }
@@ -458,27 +538,27 @@ export default class App extends PureComponent {
   handleValueChange = command => {
     console.log("SELECTED:", command);
 
-    if (this.state.suggestions === HELP_COMMANDS) {
-      const index = HELP_COMMANDS.findIndex(
-        item => item.prefix === command.prefix
-      );
-      if (index !== -1) {
-        switch (command.prefix) {
-          case ">":
-            this.setState({ suggestions: COMMANDS, command: null });
-            console.log(">>>");
-            break;
-          case "@":
-            break;
-          case ":":
-            break;
-          default:
-            // goto file
-            this.setState({ suggestions: FILES, command: null });
-            break;
-        }
-      }
-    }
+    // if (this.state.suggestions === HELP_COMMANDS) {
+    //   const index = HELP_COMMANDS.findIndex(
+    //     item => item.prefix === command.prefix
+    //   );
+    //   if (index !== -1) {
+    //     switch (command.prefix) {
+    //       case ">":
+    //         this.setState({ suggestions: COMMANDS, command: null });
+    //         console.log(">>>");
+    //         break;
+    //       case "@":
+    //         break;
+    //       case ":":
+    //         break;
+    //       default:
+    //         // goto file
+    //         this.setState({ suggestions: FILES, command: null });
+    //         break;
+    //     }
+    //   }
+    // }
 
     // this.setState({ command });
   };
