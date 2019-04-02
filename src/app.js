@@ -151,6 +151,44 @@ const specialKeys = {
   delete: "Delete"
 };
 
+const specialFiles = {
+  "package.json": "npm.svg",
+  ".gitignore": "git.svg",
+  ".npmrc": "npm.svg"
+};
+
+const fileExtensions = {
+  js: "javascript.svg",
+  json: "json.svg",
+  md: "markdown.svg",
+  txt: "file.svg"
+};
+
+const fileExtensionRegex = /\.([0-9a-z]{1,5})$/i;
+
+const fileIcon = ICONS_PATH => name => {
+  let icon = specialFiles[name];
+
+  if (!icon) {
+    const extensionMatch = name.match(fileExtensionRegex);
+
+    if (extensionMatch) {
+      const extension = extensionMatch[1];
+      if (extension) {
+        icon = fileExtensions[extension.toLowerCase()];
+      }
+    }
+  }
+
+  if (!icon) {
+    icon = "file.svg";
+  }
+
+  return `${ICONS_PATH}/${icon}`;
+};
+
+const getFileIcon = fileIcon("assets/material-icons");
+
 function getKeysLabel(keystroke) {
   if (!keystroke || keystroke === "unassigned") return null;
 
@@ -232,6 +270,34 @@ function escapeRegExpChars(text) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 
+const ListItemIconStyle = styled.img`
+  margin-right: 4px;
+`;
+
+const renderFileMenuItem = (fileName, path, query) => {
+  const icon = getFileIcon(fileName);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start"
+      }}
+    >
+      <ListItemIconStyle height="16" width="16" src={icon} />
+      <span>
+        {highlightText(fileName, query)}
+        <span> </span>
+        <span style={{ fontSize: "12px", color: "grey" }}>
+          {highlightText(path, query)}
+        </span>
+      </span>
+    </div>
+  );
+};
+
 export default class App extends PureComponent {
   state = {
     command: null,
@@ -285,18 +351,6 @@ export default class App extends PureComponent {
     });
   };
 
-  renderFileMenuItem = (fileName, path, query) => {
-    return (
-      <span>
-        {highlightText(fileName, query)}
-        <span> </span>
-        <span style={{ fontSize: "12px", color: "grey" }}>
-          {highlightText(path, query)}
-        </span>
-      </span>
-    );
-  };
-
   renderCommand = (command, { handleClick, modifiers, query }) => {
     if (!modifiers.matchesPredicate) {
       return null;
@@ -313,7 +367,7 @@ export default class App extends PureComponent {
           disabled={modifiers.disabled}
           key={`${path}/${fileName}`}
           onClick={handleClick}
-          text={this.renderFileMenuItem(fileName, path, query)}
+          text={renderFileMenuItem(fileName, path, query)}
           textClassName="menu-item"
         />
       );
