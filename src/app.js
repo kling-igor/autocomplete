@@ -7,13 +7,13 @@ import { Suggest } from "@blueprintjs/select";
 
 import { COMMANDS } from "./commands";
 import { HELP_COMMANDS } from "./help-commands";
-import { FILES } from "./files";
+import { FILES, RECENT_FILES } from "./files";
 
-import { JS_SYMBOLS, JSON_SYMBOLS } from './symbols'
+import { JS_SYMBOLS, JSON_SYMBOLS } from "./symbols";
 
 import { DARK } from "@blueprintjs/core/lib/esm/common/classes";
 
-const SYMBOLS = JSON_SYMBOLS
+const SYMBOLS = JS_SYMBOLS;
 
 let GOTOLINE = [];
 
@@ -161,24 +161,31 @@ const specialKeys = {
 // https://github.com/Microsoft/vscode/tree/6511d05ec8f680d2fde87b4b5a1d909f78120697/src/vs/editor/contrib/suggest/media
 // https://github.com/Microsoft/vscode/tree/master/src/vs/editor/contrib/documentSymbols/media
 
-
 const symbolTypes = {
-  'class': 'class.svg',
-  'constructor': 'method.svg',
-  'method': 'method.svg'
-}
-
+  class: "class.svg",
+  constructor: "method.svg",
+  method: "method.svg",
+  function: "method.svg",
+  variable: "local-variable.svg",
+  constant: "constant.svg",
+  array: "array.svg",
+  boolean: "boolean-data.svg",
+  string: "string.svg",
+  number: "numeric.svg",
+  object: "namespace.svg",
+  color: "color-palette.svg"
+};
 
 const symbolIcon = ICONS_PATH => type => {
-  let icon = symbolTypes[type.toLowerCase()]
+  let icon = symbolTypes[type.toLowerCase()];
   if (!icon) {
-    icon = 'property.svg'
+    icon = "property.svg";
   }
 
   return `${ICONS_PATH}/${icon}`;
-}
+};
 
-const getSymbolIcon = symbolIcon("assets/symbol-icons")
+const getSymbolIcon = symbolIcon("assets/symbol-icons");
 
 const specialFiles = {
   "readme.md": "readme.svg",
@@ -304,7 +311,13 @@ const ListItemIconStyle = styled.img`
   margin-right: 4px;
 `;
 
-const renderFileMenuItem = (fileName, path, query) => {
+const DirtyMarker = styled.span`
+  color: grey;
+  font: 16px/1em arial, sans-serif;
+  margin-right: 4px;
+`;
+
+const renderFileMenuItem = (fileName, path, dirty, query) => {
   const icon = getFileIcon(fileName);
 
   return (
@@ -316,6 +329,7 @@ const renderFileMenuItem = (fileName, path, query) => {
         justifyContent: "flex-start"
       }}
     >
+      {!!dirty && <DirtyMarker>●</DirtyMarker>}
       <ListItemIconStyle height="16" width="16" src={icon} />
       <span>
         {highlightText(fileName, query)}
@@ -329,8 +343,7 @@ const renderFileMenuItem = (fileName, path, query) => {
 };
 
 const renderSymbolItem = (symbol, type, query) => {
-
-  const icon = getSymbolIcon(type)
+  const icon = getSymbolIcon(type);
   return (
     <div
       style={{
@@ -341,44 +354,36 @@ const renderSymbolItem = (symbol, type, query) => {
       }}
     >
       <ListItemIconStyle height="16" width="16" src={icon} />
-      <span>
-        {highlightText(symbol, query)}
-      </span>
+      <span>{highlightText(symbol, query)}</span>
     </div>
   );
-
-}
+};
 export default class App extends PureComponent {
   state = {
     command: null,
-    suggestions: FILES
+    suggestions: RECENT_FILES
   };
 
   renderInputValue = inputValue => {
-    console.log("renderInputValue:", inputValue);
-    // console.log("\t", this.state.suggestions);
-
-    if (this.state.suggestions === FILES) {
-      // return inputValue;
+    if (this.state.suggestions === RECENT_FILES) {
       const { fileName } = inputValue;
       return fileName;
     }
 
     if (this.state.suggestions === SYMBOLS) {
-      const { symbol } = inputValue
-      return symbol
+      const { symbol } = inputValue;
+      return symbol;
     }
 
     if (this.state.suggestions === COMMANDS) {
       const { context, title } = inputValue;
       return context ? `${context}: ${title}` : title;
     }
+
     return inputValue;
   };
 
   filterCommands = (query, items) => {
-    console.log("filterCommands:", items);
-
     if (query.startsWith(">")) {
       const commandQuery = query.replace(">", "");
       return COMMANDS.filter(({ context, title }) => {
@@ -413,7 +418,14 @@ export default class App extends PureComponent {
       return [`Goto line ${lineNumber}.`];
     }
 
-    return FILES.filter(({ fileName, path }) => {
+    if (query.length > 0) {
+      return FILES.filter(({ fileName, path }) => {
+        const text = `${path}/${fileName}`;
+        return text.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+      });
+    }
+
+    return RECENT_FILES.filter(({ fileName, path }) => {
       const text = `${path}/${fileName}`;
       return text.toLowerCase().indexOf(query.toLowerCase()) >= 0;
     });
@@ -427,15 +439,18 @@ export default class App extends PureComponent {
     // console.log("renderCommand:", command);
     // console.log("\tsuggestions:", this.state.suggestions);
 
-    if (this.state.suggestions === FILES) {
-      const { fileName, path } = command;
+    if (
+      this.state.suggestions === FILES ||
+      this.state.suggestions === RECENT_FILES
+    ) {
+      const { fileName, path, dirty } = command;
       return (
         <MenuItem
           active={modifiers.active}
           disabled={modifiers.disabled}
           key={`${path}/${fileName}`}
           onClick={handleClick}
-          text={renderFileMenuItem(fileName, path, query)}
+          text={renderFileMenuItem(fileName, path, dirty, query)}
           textClassName="menu-item"
         />
       );
@@ -472,7 +487,7 @@ export default class App extends PureComponent {
       const { prefix, description } = command;
       return (
         <MenuItem
-          active={false}// modifiers.active
+          active={false} // modifiers.active
           disabled={modifiers.disabled}
           // labelElement={getDescription(description)}
           key={`${prefix}`}
@@ -518,15 +533,19 @@ export default class App extends PureComponent {
       if (suggestions !== GOTOLINE) {
         this.setState({ suggestions: GOTOLINE });
       }
-    }
-    else if (query.startsWith("@")) {
+    } else if (query.startsWith("@")) {
       if (suggestions !== SYMBOLS) {
         this.setState({ suggestions: SYMBOLS });
       }
-    }
-    else {
-      if (suggestions !== FILES) {
-        this.setState({ suggestions: FILES });
+    } else {
+      if (query.length === 0) {
+        if (suggestions !== RECENT_FILES) {
+          this.setState({ suggestions: RECENT_FILES });
+        }
+      } else {
+        if (suggestions !== FILES) {
+          this.setState({ suggestions: FILES });
+        }
       }
     }
 
