@@ -96,13 +96,13 @@ const GlobalStyle = createGlobalStyle`
 
   .menu-item {
     font-size: 13px;
-    font-weight: 700;
+    /* font-weight: 300; */
     line-height: 1em;
   }
 `
 
-const getSymbolIcon = symbolIcon('assets/symbol-icons')
-const getFileIcon = fileIcon('assets/material-icons')
+// const getSymbolIcon = symbolIcon('assets/symbol-icons')
+// const getFileIcon = fileIcon('assets/material-icons')
 
 /**
  * files - список всех файлов проекта или []
@@ -122,14 +122,15 @@ export default class App extends PureComponent {
         <GlobalStyle />
 
         <QuickLaunch
+          darkTheme={false}
           files={FILES}
           recentFiles={RECENT_FILES}
           symbols={SYMBOLS}
           commands={COMMANDS}
           fileLinesCount={42}
           currentLineNumber={3}
-          getSymbolIcon={getSymbolIcon}
-          getFileIcon={getFileIcon}
+          fileIconsPath={'assets/material-icons'}
+          symbolIconsPath={'assets/symbol-icons'}
           onLineNumberChanged={line => {
             console.log('MOVE TO LINE:', line)
           }}

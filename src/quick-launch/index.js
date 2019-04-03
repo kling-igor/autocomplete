@@ -114,36 +114,6 @@ const fileExtensions = {
 
 const fileExtensionRegex = /\.([0-9a-z]{1,5})$/i
 
-export const fileIcon = ICONS_PATH => name => {
-  let icon = specialFiles[name.toLowerCase()]
-
-  if (!icon) {
-    const extensionMatch = name.toLowerCase().match(fileExtensionRegex)
-
-    if (extensionMatch) {
-      const extension = extensionMatch[1]
-      if (extension) {
-        icon = fileExtensions[extension.toLowerCase()]
-      }
-    }
-  }
-
-  if (!icon) {
-    icon = 'file.svg'
-  }
-
-  return `${ICONS_PATH}/${icon}`
-}
-
-export const symbolIcon = ICONS_PATH => type => {
-  let icon = symbolTypes[type.toLowerCase()]
-  if (!icon) {
-    icon = 'property.svg'
-  }
-
-  return `${ICONS_PATH}/${icon}`
-}
-
 function getKeysLabel(keystroke) {
   if (!keystroke || keystroke === 'unassigned') return null
 
@@ -218,7 +188,7 @@ const ListItemIconStyle = styled.img`
 `
 
 const DirtyMarker = styled.span`
-  color: grey;
+  color: ${({ darkTheme }) => (darkTheme ? 'white' : 'grey')};
   font: 16px/1em arial, sans-serif;
   margin-right: 4px;
 `
@@ -228,8 +198,43 @@ export class QuickLaunch extends React.Component {
     mode: MODE.RECENT_FILES
   }
 
+  fileIcon = name => {
+    let icon = specialFiles[name.toLowerCase()]
+
+    if (!icon) {
+      const extensionMatch = name.toLowerCase().match(fileExtensionRegex)
+
+      if (extensionMatch) {
+        const extension = extensionMatch[1]
+        if (extension) {
+          icon = fileExtensions[extension.toLowerCase()]
+        }
+      }
+    }
+
+    if (!icon) {
+      icon = 'file.svg'
+    }
+
+    return `${this.props.fileIconsPath}/${icon}`
+  }
+
+  symbolIcon = type => {
+    let icon = symbolTypes[type.toLowerCase()]
+    if (!icon) {
+      icon = 'property.svg'
+    }
+
+    if (this.props.darkTheme) {
+      icon = icon.slice(0, -4) + '_dark.svg'
+      console.log(icon)
+    }
+
+    return `${this.props.symbolIconsPath}/${icon}`
+  }
+
   renderFileMenuItem = (fileName, path, dirty, query) => {
-    const icon = this.props.getFileIcon(fileName)
+    const icon = this.fileIcon(fileName)
 
     return (
       <div
@@ -240,7 +245,7 @@ export class QuickLaunch extends React.Component {
           justifyContent: 'flex-start'
         }}
       >
-        {!!dirty && <DirtyMarker>●</DirtyMarker>}
+        {!!dirty && <DirtyMarker darkTheme={this.props.darkTheme}>●</DirtyMarker>}
         <ListItemIconStyle height="16" width="16" src={icon} />
         <span>
           {highlightText(fileName, query)}
@@ -252,7 +257,7 @@ export class QuickLaunch extends React.Component {
   }
 
   renderSymbolItem = (symbol, type, query) => {
-    const icon = this.props.getSymbolIcon(type)
+    const icon = this.symbolIcon(type)
     return (
       <div
         style={{
@@ -481,6 +486,7 @@ export class QuickLaunch extends React.Component {
   render() {
     return (
       <Dialog
+        className={this.props.darkTheme ? 'bp3-dark' : ''}
         isOpen={true}
         transitionDuration={0}
         backdropClassName="backdrop"
