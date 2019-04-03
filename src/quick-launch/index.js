@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 
 import { MenuItem, Dialog, Classes } from '@blueprintjs/core'
@@ -11,6 +11,13 @@ const MODE = {
   GOTOLINE: Symbol('GOTOLINE'),
   HELP: Symbol('HELP'),
   COMMANDS: Symbol('COMMANDS')
+}
+
+const MODE_BY_PREFIX = {
+  '>': MODE.COMMANDS,
+  '?': MODE.HELP,
+  ':': MODE.GOTOLINE,
+  '@': MODE.SYMBOLS
 }
 
 const HELP_COMMANDS = [
@@ -218,8 +225,6 @@ const DirtyMarker = styled.span`
 
 export class QuickLaunch extends React.Component {
   state = {
-    command: null,
-    // suggestions: RECENT_FILES,
     mode: MODE.RECENT_FILES
   }
 
@@ -336,9 +341,6 @@ export class QuickLaunch extends React.Component {
       return null
     }
 
-    // console.log("renderCommand:", command);
-    // console.log("\tsuggestions:", this.state.suggestions);
-
     switch (this.state.mode) {
       case MODE.FILES:
       case MODE.RECENT_FILES:
@@ -386,9 +388,8 @@ export class QuickLaunch extends React.Component {
         const { prefix, description } = command
         return (
           <MenuItem
-            active={false} // modifiers.active
+            active={false}
             disabled={modifiers.disabled}
-            // labelElement={getDescription(description)}
             key={`${prefix}`}
             onClick={handleClick}
             text={highlightText(`${prefix} ${description}`, query)}
@@ -410,149 +411,42 @@ export class QuickLaunch extends React.Component {
     }
 
     return null
-
-    // if (this.state.mode === MODE.FILES || this.state.mode === MODE.RECENT_FILES) {
-    //   const { fileName, path, dirty } = command
-    //   return (
-    //     <MenuItem
-    //       active={modifiers.active}
-    //       disabled={modifiers.disabled}
-    //       key={`${path}/${fileName}`}
-    //       onClick={handleClick}
-    //       text={this.renderFileMenuItem(fileName, path, dirty, query)}
-    //       textClassName="menu-item"
-    //     />
-    //   )
-    // }
-    // if (this.state.mode === MODE.SYMBOLS) {
-    //   const { symbol, type, line } = command
-    //   return (
-    //     <MenuItem
-    //       active={modifiers.active}
-    //       disabled={modifiers.disabled}
-    //       key={`${symbol}/${line}`}
-    //       onClick={handleClick}
-    //       text={this.renderSymbolItem(symbol, type, query)}
-    //       textClassName="menu-item"
-    //     />
-    //   )
-    // }
-    // if (this.state.mode === MODE.COMMANDS) {
-    //   const { context, key, title } = command
-    //   const text = context ? `${context}: ${title}` : title
-    //   return (
-    //     <MenuItem
-    //       active={modifiers.active}
-    //       disabled={modifiers.disabled}
-    //       labelElement={getKeysLabel(key)}
-    //       key={text}
-    //       onClick={handleClick}
-    //       text={highlightText(text, query)}
-    //       textClassName="menu-item"
-    //     />
-    //   )
-    // }
-    // if (this.state.mode === MODE.HELP) {
-    //   const { prefix, description } = command
-    //   return (
-    //     <MenuItem
-    //       active={false} // modifiers.active
-    //       disabled={modifiers.disabled}
-    //       // labelElement={getDescription(description)}
-    //       key={`${prefix}`}
-    //       onClick={handleClick}
-    //       text={highlightText(`${prefix} ${description}`, query)}
-    //       textClassName="menu-item"
-    //     />
-    //   )
-    // }
-    // if (this.state.mode === MODE.GOTOLINE) {
-    //   return (
-    //     <MenuItem
-    //       active={false}
-    //       disabled={modifiers.disabled}
-    //       key={command}
-    //       onClick={handleClick}
-    //       text={command}
-    //       textClassName="menu-item"
-    //     />
-    //   )
-    // }
-
-    // return null
   }
 
   onQueryChange = query => {
-    // console.log("onQueryChange", query);
-
     const { mode } = this.state
 
-    if (query.startsWith('>')) {
-      if (mode !== MODE.COMMANDS) {
-        this.setState({ mode: MODE.COMMANDS })
-      }
-    } else if (query.startsWith('?')) {
-      if (mode !== MODE.HELP) {
-        this.setState({ mode: MODE.HELP })
-      }
-
-      // есть есть второй символ
-      // анализируем его
-    } else if (query.startsWith(':')) {
-      if (mode !== MODE.GOTOLINE) {
-        this.setState({ mode: MODE.GOTOLINE })
-      }
-    } else if (query.startsWith('@')) {
-      if (mode !== MODE.SYMBOLS) {
-        this.setState({ mode: MODE.SYMBOLS })
+    // если ничего не введено
+    if (query.length === 0) {
+      if (mode !== MODE.RECENT_FILES) {
+        // показываем список недавних файлов
+        this.setState({ mode: MODE.RECENT_FILES })
       }
     } else {
-      if (query.length === 0) {
-        if (mode !== MODE.RECENT_FILES) {
-          this.setState({ mode: MODE.RECENT_FILES })
+      // иначе берем префикс
+      const prefix = query.slice(0, 1)
+      // пытаемся определить режим по нему
+      const currentMode = MODE_BY_PREFIX[prefix]
+      if (currentMode) {
+        if (mode !== currentMode) {
+          this.setState({ mode: currentMode })
         }
       } else {
+        // если нет подходящего префикса
         if (mode !== MODE.FILES) {
+          // тогда это режим показа всех файлов проекта
           this.setState({ mode: MODE.FILES })
         }
       }
-    }
-
-    if (query.length === 0) {
-      this.setState({ command: null })
     }
   }
 
   handleValueChange = command => {
     console.log('SELECTED:', command)
-
-    // if (this.state.suggestions === HELP_COMMANDS) {
-    //   const index = HELP_COMMANDS.findIndex(
-    //     item => item.prefix === command.prefix
-    //   );
-    //   if (index !== -1) {
-    //     switch (command.prefix) {
-    //       case ">":
-    //         this.setState({ suggestions: COMMANDS, command: null });
-    //         console.log(">>>");
-    //         break;
-    //       case "@":
-    //         break;
-    //       case ":":
-    //         break;
-    //       default:
-    //         // goto file
-    //         this.setState({ suggestions: FILES, command: null });
-    //         break;
-    //     }
-    //   }
-    // }
-
-    // this.setState({ command });
   }
 
   renderNoResults = () => {
-    const text = this.state.suggestions === this.props.commands ? 'No commands matching' : 'No result found'
+    const text = this.state.mode === MODE.COMMANDS ? 'No commands matching' : 'No result found'
     return <MenuItem disabled={true} text={text} />
   }
 
@@ -571,14 +465,12 @@ export class QuickLaunch extends React.Component {
           className={Classes.DIALOG_BODY}
           style={{
             width: 500,
-            height: 72
+            height: 66 // 72
           }}
         >
           <Suggest
             items={[]}
-            // selectedItem={this.state.command}
             itemRenderer={this.renderCommand}
-            // itemPredicate={this.filterCommand}
             itemListPredicate={this.filterCommands}
             onQueryChange={this.onQueryChange}
             closeOnSelect={true}
