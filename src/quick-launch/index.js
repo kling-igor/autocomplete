@@ -431,6 +431,19 @@ export class QuickLaunch extends React.Component {
         if (mode !== currentMode) {
           this.setState({ mode: currentMode })
         }
+
+        if (currentMode === MODE.GOTOLINE) {
+          const lineNumber = Number.parseInt(query.slice(1))
+          if (
+            !Number.isNaN(lineNumber) &&
+            lineNumber > 0 &&
+            lineNumber <= this.props.fileLinesCount &&
+            lineNumber !== this.state.lineNumber
+          ) {
+            this.props.onLineNumberChanged(lineNumber)
+            this.setState({ lineNumber })
+          }
+        }
       } else {
         // если нет подходящего префикса
         if (mode !== MODE.FILES) {
@@ -441,8 +454,23 @@ export class QuickLaunch extends React.Component {
     }
   }
 
-  handleValueChange = command => {
-    console.log('SELECTED:', command)
+  handleValueChange = value => {
+    const { mode } = this.state
+
+    switch (mode) {
+      case MODE.FILES:
+      case MODE.RECENT_FILES:
+        this.props.onSelectFile(value)
+        return
+
+      case MODE.SYMBOLS:
+        this.props.onSelectSymbol(value)
+        return
+
+      case MODE.COMMANDS:
+        this.props.onSelectCommand(value)
+        return
+    }
   }
 
   renderNoResults = () => {

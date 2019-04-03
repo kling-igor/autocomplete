@@ -130,6 +130,18 @@ export default class App extends PureComponent {
           currentLineNumber={3}
           getSymbolIcon={getSymbolIcon}
           getFileIcon={getFileIcon}
+          onLineNumberChanged={line => {
+            console.log('MOVE TO LINE:', line)
+          }}
+          onSelectCommand={command => {
+            console.log('SELECTED COMMANDS:', command)
+          }}
+          onSelectFile={file => {
+            console.log('SELECTED FILE:', file)
+          }}
+          onSelectSymbol={symbol => {
+            console.log('SELECTED SYMBOL:', symbol)
+          }}
         />
       </>
     )
